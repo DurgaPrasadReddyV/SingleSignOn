@@ -28,8 +28,6 @@ namespace IdentityServer.Admin
 
             try
             {
-                DockerHelpers.ApplyDockerConfiguration(configuration);
-
                 var host = CreateHostBuilder(args).Build();
 
                 await ApplyDbMigrationsWithDataSeedAsync(args, configuration, host);

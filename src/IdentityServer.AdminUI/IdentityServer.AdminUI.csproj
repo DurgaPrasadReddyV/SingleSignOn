@@ -2,13 +2,8 @@
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
-        <Version>2.0.1</Version>
-        <Authors>Jan Škoruba</Authors>
         <LangVersion>latest</LangVersion>
         <UserSecretsId>8fe260ca-ef4c-4fa3-9364-029146f8d339</UserSecretsId>
-        <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
-        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        <DockerfileContext>..\..</DockerfileContext>
     </PropertyGroup>
 
     <ItemGroup>
@@ -56,8 +51,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\IdentityServer.Admin.EntityFramework.Shared\IdentityServer.Admin.EntityFramework.Shared.csproj" />
-        <ProjectReference Include="..\IdentityServer.Admin.EntityFramework.SqlServer\IdentityServer.Admin.EntityFramework.SqlServer.csproj" />
+        <ProjectReference Include="..\IdentityServer.Admin.EntityFramework\IdentityServer.Admin.EntityFramework.csproj" />
         <ProjectReference Include="..\IdentityServer.Shared\IdentityServer.Shared.csproj" />
     </ItemGroup>
 
