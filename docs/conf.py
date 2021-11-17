@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# ID4WithClients documentation build configuration file, created by
+# IdentityServer documentation build configuration file, created by
 # sphinx-quickstart on Fri Dec 29 18:33:13 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -50,9 +50,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'ID4WithClients'
-copyright = '2017, Dave Boal'
-author = 'Dave Boal'
+project = 'Identity Server'
+copyright = '2021, Durga Prasad'
+author = 'Durga Prasad'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -128,7 +128,7 @@ html_sidebars = {
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'ID4ClientTestdoc'
+htmlhelp_basename = 'IdentityServer'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -155,8 +155,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ID4WithClients.tex', 'ID4WithClients Documentation',
-     'Dave Boal', 'manual'),
+    (master_doc, 'IdentityServer.tex', 'IdentityServer Documentation',
+     'Durga Prasad', 'manual'),
 ]
 
 
@@ -165,7 +165,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'id4withclients', 'ID4WithClients Documentation',
+    (master_doc, 'IdentityServer', 'IdentityServer Documentation',
      [author], 1)
 ]
 
@@ -176,8 +176,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'ID4WithClients', 'ID4WithClients Documentation',
-     author, 'ID4WithClients', 'One line description of project.',
+    (master_doc, 'IdentityServer', 'IdentityServer Documentation',
+     author, 'Durga Prasad', 'One line description of project.',
      'Miscellaneous'),
 ]
 
