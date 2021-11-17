@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5E010AFB-98C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityServer.AdminUI", "src\IdentityServer.AdminUI\IdentityServer.AdminUI.csproj", "{3B11FCB3-800D-47A5-84DA-B9B8C0AEC0A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityServer.STS.Identity", "src\IdentityServer.STS.Identity\IdentityServer.STS.Identity.csproj", "{15DC446D-B04B-4238-885E-1CFBF681F3A1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityServer.AuthServer", "src\IdentityServer.AuthServer\IdentityServer.AuthServer.csproj", "{15DC446D-B04B-4238-885E-1CFBF681F3A1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityServer.Admin.Api", "src\IdentityServer.Admin.Api\IdentityServer.Admin.Api.csproj", "{B6A6984A-FBD1-43C2-A1F7-7242DA0E7BDD}"
 EndProject
