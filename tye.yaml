@@ -10,7 +10,7 @@ services:
     - Kestrel__Certificates__Default__Password=8b6039b6-c67a-448b-977b-0ce6d3fcfd49
 
 - name: admin-api
-  project: src/IdentityServer.AuthServer/IdentityServer.AuthServer.csproj
+  project: src/IdentityServer.Admin.Api/IdentityServer.Admin.Api.csproj
   bindings:
     - protocol: https
       port: 44302
@@ -19,7 +19,7 @@ services:
     - Kestrel__Certificates__Default__Password=8b6039b6-c67a-448b-977b-0ce6d3fcfd49
 
 - name: admin-ui
-  project: src/IdentityServer.AuthServer/IdentityServer.AuthServer.csproj
+  project: src/IdentityServer.AdminUI/IdentityServer.AdminUI.csproj
   bindings:
     - protocol: https
       port: 44303
