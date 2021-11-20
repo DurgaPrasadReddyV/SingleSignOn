@@ -6,11 +6,11 @@ using System.Text;
 
 namespace SingleSignOn.EntityFrameworkCore.DbContexts
 {
-    public class IdentityServerDataProtectionDbContext : DbContext, IDataProtectionKeyContext
+    public class DataProtectionDbContext : DbContext, IDataProtectionKeyContext
     {
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
-        public IdentityServerDataProtectionDbContext(DbContextOptions<IdentityServerDataProtectionDbContext> options)
+        public DataProtectionDbContext(DbContextOptions<DataProtectionDbContext> options)
             : base(options) { }
     }
 }

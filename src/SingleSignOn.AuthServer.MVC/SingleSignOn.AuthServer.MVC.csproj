@@ -6,6 +6,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Content Include="..\sharedsettings.json" Link="sharedsettings.json" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="AspNetCore.HealthChecks.MySql" Version="5.0.1" />
         <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="5.0.2" />
         <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="5.0.2" />

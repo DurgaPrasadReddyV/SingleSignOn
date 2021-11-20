@@ -42,10 +42,11 @@ namespace SingleSignOn.Admin.WebApi
             var adminApiConfiguration = Configuration.GetSection(nameof(AdminApiConfiguration)).Get<AdminApiConfiguration>();
             services.AddSingleton(adminApiConfiguration);
 
-            // Add DbContexts
-            RegisterDbContexts(services);
+            services.AddDbContexts<IdentityDbContext, IdentityServerConfigurationDbContext, 
+                IdentityServerPersistedGrantDbContext, LogDbContext, AuditLogDbContext, 
+                DataProtectionDbContext, AuditLog>(Configuration);
 
-            services.AddDataProtection<IdentityServerDataProtectionDbContext>(Configuration);
+            services.AddDataProtection<DataProtectionDbContext>(Configuration);
 
             // Add email senders which is currently setup for SendGrid and SMTP
             services.AddEmailSenders(Configuration);
@@ -53,25 +54,28 @@ namespace SingleSignOn.Admin.WebApi
             services.AddScoped<ControllerExceptionFilterAttribute>();
             services.AddScoped<IApiErrorResources, ApiErrorResources>();
 
-            // Add authentication services
-            RegisterAuthentication(services);
+            services.AddApiAuthentication<IdentityDbContext, 
+                UserIdentity, UserIdentityRole>(Configuration);
 
-            // Add authorization services
-            RegisterAuthorization(services);
+            services.AddAuthorizationPolicies();
 
             var profileTypes = new HashSet<Type>
             {
-                typeof(IdentityMapperProfile<IdentityRoleDto, IdentityUserRolesDto, string, IdentityUserClaimsDto, IdentityUserClaimDto, IdentityUserProviderDto, IdentityUserProvidersDto, IdentityUserChangePasswordDto, IdentityRoleClaimDto, IdentityRoleClaimsDto>)
+                typeof(IdentityMapperProfile<IdentityRoleDto, IdentityUserRolesDto, string, IdentityUserClaimsDto, 
+                IdentityUserClaimDto, IdentityUserProviderDto, IdentityUserProvidersDto, IdentityUserChangePasswordDto, 
+                IdentityRoleClaimDto, IdentityRoleClaimsDto>)
             };
 
-            services.AddAdminAspNetIdentityServices<AdminIdentityDbContext, IdentityServerPersistedGrantDbContext,
-                IdentityUserDto, IdentityRoleDto, UserIdentity, UserIdentityRole, string, UserIdentityUserClaim, UserIdentityUserRole,
+            services.AddAdminAspNetIdentityServices<IdentityDbContext, IdentityServerPersistedGrantDbContext,
+                IdentityUserDto, IdentityRoleDto, UserIdentity, UserIdentityRole, string, 
+                UserIdentityUserClaim, UserIdentityUserRole,
                 UserIdentityUserLogin, UserIdentityRoleClaim, UserIdentityUserToken,
                 IdentityUsersDto, IdentityRolesDto, IdentityUserRolesDto,
                 IdentityUserClaimsDto, IdentityUserProviderDto, IdentityUserProvidersDto, IdentityUserChangePasswordDto,
                 IdentityRoleClaimsDto, IdentityUserClaimDto, IdentityRoleClaimDto>(profileTypes);
 
-            services.AddAdminServices<IdentityServerConfigurationDbContext, IdentityServerPersistedGrantDbContext, AdminLogDbContext>();
+            services.AddAdminServices<IdentityServerConfigurationDbContext, 
+                IdentityServerPersistedGrantDbContext, LogDbContext>();
 
             services.AddAdminApiCors(adminApiConfiguration);
 
@@ -84,7 +88,8 @@ namespace SingleSignOn.Admin.WebApi
 
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc(adminApiConfiguration.ApiVersion, new OpenApiInfo { Title = adminApiConfiguration.ApiName, Version = adminApiConfiguration.ApiVersion });
+                options.SwaggerDoc(adminApiConfiguration.ApiVersion, new OpenApiInfo 
+                { Title = adminApiConfiguration.ApiName, Version = adminApiConfiguration.ApiVersion });
 
                 options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
                 {
@@ -104,9 +109,7 @@ namespace SingleSignOn.Admin.WebApi
                 options.OperationFilter<AuthorizeCheckOperationFilter>();
             });
 
-            services.AddAuditEventLogging<AdminAuditLogDbContext, AuditLog>(Configuration);
-
-            services.AddIdSHealthChecks<IdentityServerConfigurationDbContext, IdentityServerPersistedGrantDbContext, AdminIdentityDbContext, AdminLogDbContext, AdminAuditLogDbContext, IdentityServerDataProtectionDbContext>(Configuration, adminApiConfiguration);
+            services.AddAuditEventLogging<AuditLogDbContext, AuditLog>(Configuration);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AdminApiConfiguration adminApiConfiguration)
@@ -129,7 +132,7 @@ namespace SingleSignOn.Admin.WebApi
             });
 
             app.UseRouting();
-            UseAuthentication(app);
+            app.UseAuthentication();
             app.UseCors();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
@@ -141,26 +144,6 @@ namespace SingleSignOn.Admin.WebApi
                     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
                 });
             });
-        }
-
-        public virtual void RegisterDbContexts(IServiceCollection services)
-        {
-            services.AddDbContexts<AdminIdentityDbContext, IdentityServerConfigurationDbContext, IdentityServerPersistedGrantDbContext, AdminLogDbContext, AdminAuditLogDbContext, IdentityServerDataProtectionDbContext, AuditLog>(Configuration);
-        }
-
-        public virtual void RegisterAuthentication(IServiceCollection services)
-        {
-            services.AddApiAuthentication<AdminIdentityDbContext, UserIdentity, UserIdentityRole>(Configuration);
-        }
-
-        public virtual void RegisterAuthorization(IServiceCollection services)
-        {
-            services.AddAuthorizationPolicies();
-        }
-
-        public virtual void UseAuthentication(IApplicationBuilder app)
-        {
-            app.UseAuthentication();
         }
     }
 }

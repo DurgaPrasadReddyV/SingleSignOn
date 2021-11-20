@@ -52,7 +52,8 @@ namespace SingleSignOn.Admin.WebApi.Helpers
             return services;
         }
 
-        public static IServiceCollection AddAdminApiCors(this IServiceCollection services, AdminApiConfiguration adminApiConfiguration)
+        public static IServiceCollection AddAdminApiCors(this IServiceCollection services,
+            AdminApiConfiguration adminApiConfiguration)
         {
             services.AddCors(options =>
             {
@@ -118,7 +119,8 @@ namespace SingleSignOn.Admin.WebApi.Helpers
                         new GenericTypeControllerFeatureProvider<TUserDto, TRoleDto,
                             TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken,
                             TUsersDto, TRolesDto, TUserRolesDto, TUserClaimsDto,
-                            TUserProviderDto, TUserProvidersDto, TUserChangePasswordDto, TRoleClaimsDto, TUserClaimDto, TRoleClaimDto>());
+                            TUserProviderDto, TUserProvidersDto, TUserChangePasswordDto,
+                            TRoleClaimsDto, TUserClaimDto, TRoleClaimDto>());
                 });
         }
 
@@ -135,7 +137,8 @@ namespace SingleSignOn.Admin.WebApi.Helpers
         /// <param name="services"></param>
         /// <param name="configuration"></param>
         public static void AddDbContexts<TIdentityDbContext, TConfigurationDbContext, TPersistedGrantDbContext,
-            TLogDbContext, TAuditLoggingDbContext, TDataProtectionDbContext, TAuditLog>(this IServiceCollection services, IConfiguration configuration)
+            TLogDbContext, TAuditLoggingDbContext, TDataProtectionDbContext, TAuditLog>(this IServiceCollection services,
+            IConfiguration configuration)
             where TIdentityDbContext : DbContext
             where TPersistedGrantDbContext : DbContext, IAdminPersistedGrantDbContext
             where TConfigurationDbContext : DbContext, IAdminConfigurationDbContext
@@ -144,24 +147,13 @@ namespace SingleSignOn.Admin.WebApi.Helpers
             where TDataProtectionDbContext : DbContext, IDataProtectionKeyContext
             where TAuditLog : AuditLog
         {
-            var databaseProvider = configuration.GetSection(nameof(DatabaseProviderConfiguration)).Get<DatabaseProviderConfiguration>();
-            var databaseMigrations = configuration.GetSection(nameof(DatabaseMigrationsConfiguration)).Get<DatabaseMigrationsConfiguration>() ?? new DatabaseMigrationsConfiguration();
+            var databaseMigrations = configuration.GetSection(nameof(DatabaseMigrationsConfiguration))
+                .Get<DatabaseMigrationsConfiguration>() ?? new DatabaseMigrationsConfiguration();
             var connectionStrings = configuration.GetSection("ConnectionStrings").Get<ConnectionStringsConfiguration>();
 
-            switch (databaseProvider.ProviderType)
-            {
-                case DatabaseProviderType.SqlServer:
-                    services.RegisterSqlServerDbContexts<TIdentityDbContext, TConfigurationDbContext, TPersistedGrantDbContext, TLogDbContext, TAuditLoggingDbContext, TDataProtectionDbContext, TAuditLog>(connectionStrings, databaseMigrations);
-                    break;
-                case DatabaseProviderType.PostgreSQL:
-                    services.RegisterNpgSqlDbContexts<TIdentityDbContext, TConfigurationDbContext, TPersistedGrantDbContext, TLogDbContext, TAuditLoggingDbContext, TDataProtectionDbContext, TAuditLog>(connectionStrings, databaseMigrations);
-                    break;
-                case DatabaseProviderType.MySql:
-                    services.RegisterMySqlDbContexts<TIdentityDbContext, TConfigurationDbContext, TPersistedGrantDbContext, TLogDbContext, TAuditLoggingDbContext, TDataProtectionDbContext, TAuditLog>(connectionStrings, databaseMigrations);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(databaseProvider.ProviderType), $@"The value needs to be one of {string.Join(", ", Enum.GetNames(typeof(DatabaseProviderType)))}.");
-            }
+            services.RegisterSqlServerDbContexts<TIdentityDbContext,
+                TConfigurationDbContext, TPersistedGrantDbContext, TLogDbContext, TAuditLoggingDbContext,
+                TDataProtectionDbContext, TAuditLog>(connectionStrings, databaseMigrations);
         }
 
         /// <summary>
@@ -201,46 +193,6 @@ namespace SingleSignOn.Admin.WebApi.Helpers
                 });
         }
 
-        /// <summary>
-        /// Register in memory DbContexts for IdentityServer ConfigurationStore and PersistedGrants, Identity and Logging
-        /// For testing purpose only
-        /// </summary>
-        /// <typeparam name="TConfigurationDbContext"></typeparam>
-        /// <typeparam name="TPersistedGrantDbContext"></typeparam>
-        /// <typeparam name="TLogDbContext"></typeparam>
-        /// <typeparam name="TIdentityDbContext"></typeparam>
-        /// <typeparam name="TAuditLoggingDbContext"></typeparam>
-        /// <typeparam name="TDataProtectionDbContext"></typeparam>
-        /// <param name="services"></param>
-        public static void RegisterDbContextsStaging<TIdentityDbContext, TConfigurationDbContext, TPersistedGrantDbContext, TLogDbContext, TAuditLoggingDbContext, TDataProtectionDbContext>(this IServiceCollection services)
-            where TIdentityDbContext : DbContext
-            where TPersistedGrantDbContext : DbContext, IAdminPersistedGrantDbContext
-            where TConfigurationDbContext : DbContext, IAdminConfigurationDbContext
-            where TLogDbContext : DbContext, IAdminLogDbContext
-            where TAuditLoggingDbContext : DbContext, IAuditLoggingDbContext<AuditLog>
-            where TDataProtectionDbContext : DbContext, IDataProtectionKeyContext
-        {
-            var persistedGrantsDatabaseName = Guid.NewGuid().ToString();
-            var configurationDatabaseName = Guid.NewGuid().ToString();
-            var logDatabaseName = Guid.NewGuid().ToString();
-            var identityDatabaseName = Guid.NewGuid().ToString();
-            var auditLoggingDatabaseName = Guid.NewGuid().ToString();
-            var dataProtectionDatabaseName = Guid.NewGuid().ToString();
-
-            var operationalStoreOptions = new OperationalStoreOptions();
-            services.AddSingleton(operationalStoreOptions);
-
-            var storeOptions = new ConfigurationStoreOptions();
-            services.AddSingleton(storeOptions);
-
-            services.AddDbContext<TIdentityDbContext>(optionsBuilder => optionsBuilder.UseInMemoryDatabase(identityDatabaseName));
-            services.AddDbContext<TPersistedGrantDbContext>(optionsBuilder => optionsBuilder.UseInMemoryDatabase(persistedGrantsDatabaseName));
-            services.AddDbContext<TConfigurationDbContext>(optionsBuilder => optionsBuilder.UseInMemoryDatabase(configurationDatabaseName));
-            services.AddDbContext<TLogDbContext>(optionsBuilder => optionsBuilder.UseInMemoryDatabase(logDatabaseName));
-            services.AddDbContext<TAuditLoggingDbContext>(optionsBuilder => optionsBuilder.UseInMemoryDatabase(auditLoggingDatabaseName));
-            services.AddDbContext<TDataProtectionDbContext>(optionsBuilder => optionsBuilder.UseInMemoryDatabase(dataProtectionDatabaseName));
-        }
-
         public static void AddAuthorizationPolicies(this IServiceCollection services)
         {
             var adminApiConfiguration = services.BuildServiceProvider().GetService<AdminApiConfiguration>();
@@ -250,95 +202,11 @@ namespace SingleSignOn.Admin.WebApi.Helpers
                 options.AddPolicy(AuthorizationConsts.AdministrationPolicy,
                     policy =>
                         policy.RequireAssertion(context => context.User.HasClaim(c =>
-                                ((c.Type == JwtClaimTypes.Role && c.Value == adminApiConfiguration.AdministrationRole) ||
-                                (c.Type == $"client_{JwtClaimTypes.Role}" && c.Value == adminApiConfiguration.AdministrationRole))
-                            ) && context.User.HasClaim(c => c.Type == JwtClaimTypes.Scope && c.Value == adminApiConfiguration.OidcApiName)
+                                ((c.Type == JwtClaimTypes.Role && c.Value == adminApiConfiguration.AdministrationRole) 
+                                || (c.Type == $"client_{JwtClaimTypes.Role}" && c.Value == adminApiConfiguration.AdministrationRole))) 
+                        && context.User.HasClaim(c => c.Type == JwtClaimTypes.Scope && c.Value == adminApiConfiguration.OidcApiName)
                         ));
             });
-        }
-
-        public static void AddIdSHealthChecks<TConfigurationDbContext, TPersistedGrantDbContext, TIdentityDbContext, TLogDbContext, TAuditLoggingDbContext, TDataProtectionDbContext>(this IServiceCollection services, IConfiguration configuration, AdminApiConfiguration adminApiConfiguration)
-            where TConfigurationDbContext : DbContext, IAdminConfigurationDbContext
-            where TPersistedGrantDbContext : DbContext, IAdminPersistedGrantDbContext
-            where TIdentityDbContext : DbContext
-            where TLogDbContext : DbContext, IAdminLogDbContext
-            where TAuditLoggingDbContext : DbContext, IAuditLoggingDbContext<AuditLog>
-            where TDataProtectionDbContext : DbContext, IDataProtectionKeyContext
-        {
-            var configurationDbConnectionString = configuration.GetConnectionString(ConfigurationConsts.ConfigurationDbConnectionStringKey);
-            var persistedGrantsDbConnectionString = configuration.GetConnectionString(ConfigurationConsts.PersistedGrantDbConnectionStringKey);
-            var identityDbConnectionString = configuration.GetConnectionString(ConfigurationConsts.IdentityDbConnectionStringKey);
-            var logDbConnectionString = configuration.GetConnectionString(ConfigurationConsts.AdminLogDbConnectionStringKey);
-            var auditLogDbConnectionString = configuration.GetConnectionString(ConfigurationConsts.AdminAuditLogDbConnectionStringKey);
-            var dataProtectionDbConnectionString = configuration.GetConnectionString(ConfigurationConsts.DataProtectionDbConnectionStringKey);
-
-            var identityServerUri = adminApiConfiguration.IdentityServerBaseUrl;
-            var healthChecksBuilder = services.AddHealthChecks()
-                .AddDbContextCheck<TConfigurationDbContext>("ConfigurationDbContext")
-                .AddDbContextCheck<TPersistedGrantDbContext>("PersistedGrantsDbContext")
-                .AddDbContextCheck<TIdentityDbContext>("IdentityDbContext")
-                .AddDbContextCheck<TLogDbContext>("LogDbContext")
-                .AddDbContextCheck<TAuditLoggingDbContext>("AuditLogDbContext")
-                .AddDbContextCheck<TDataProtectionDbContext>("DataProtectionDbContext")
-                .AddIdentityServer(new Uri(identityServerUri), "Identity Server");
-
-            var serviceProvider = services.BuildServiceProvider();
-            var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
-            using (var scope = scopeFactory.CreateScope())
-            {
-                var configurationTableName = DbContextHelpers.GetEntityTable<TConfigurationDbContext>(scope.ServiceProvider);
-                var persistedGrantTableName = DbContextHelpers.GetEntityTable<TPersistedGrantDbContext>(scope.ServiceProvider);
-                var identityTableName = DbContextHelpers.GetEntityTable<TIdentityDbContext>(scope.ServiceProvider);
-                var logTableName = DbContextHelpers.GetEntityTable<TLogDbContext>(scope.ServiceProvider);
-                var auditLogTableName = DbContextHelpers.GetEntityTable<TAuditLoggingDbContext>(scope.ServiceProvider);
-                var dataProtectionTableName = DbContextHelpers.GetEntityTable<TDataProtectionDbContext>(scope.ServiceProvider);
-
-                var databaseProvider = configuration.GetSection(nameof(DatabaseProviderConfiguration)).Get<DatabaseProviderConfiguration>();
-                switch (databaseProvider.ProviderType)
-                {
-                    case DatabaseProviderType.SqlServer:
-                        healthChecksBuilder
-                            .AddSqlServer(configurationDbConnectionString, name: "ConfigurationDb",
-                                healthQuery: $"SELECT TOP 1 * FROM dbo.[{configurationTableName}]")
-                            .AddSqlServer(persistedGrantsDbConnectionString, name: "PersistentGrantsDb",
-                                healthQuery: $"SELECT TOP 1 * FROM dbo.[{persistedGrantTableName}]")
-                            .AddSqlServer(identityDbConnectionString, name: "IdentityDb",
-                                healthQuery: $"SELECT TOP 1 * FROM dbo.[{identityTableName}]")
-                            .AddSqlServer(logDbConnectionString, name: "LogDb",
-                                healthQuery: $"SELECT TOP 1 * FROM dbo.[{logTableName}]")
-                            .AddSqlServer(auditLogDbConnectionString, name: "AuditLogDb",
-                                healthQuery: $"SELECT TOP 1 * FROM dbo.[{auditLogTableName}]")
-                            .AddSqlServer(dataProtectionDbConnectionString, name: "DataProtectionDb",
-                            healthQuery: $"SELECT TOP 1 * FROM dbo.[{dataProtectionTableName}]");
-                        break;
-                    case DatabaseProviderType.PostgreSQL:
-                        healthChecksBuilder
-                            .AddNpgSql(configurationDbConnectionString, name: "ConfigurationDb",
-                                healthQuery: $"SELECT * FROM \"{configurationTableName}\" LIMIT 1")
-                            .AddNpgSql(persistedGrantsDbConnectionString, name: "PersistentGrantsDb",
-                                healthQuery: $"SELECT * FROM \"{persistedGrantTableName}\" LIMIT 1")
-                            .AddNpgSql(identityDbConnectionString, name: "IdentityDb",
-                                healthQuery: $"SELECT * FROM \"{identityTableName}\" LIMIT 1")
-                            .AddNpgSql(logDbConnectionString, name: "LogDb",
-                                healthQuery: $"SELECT * FROM \"{logTableName}\" LIMIT 1")
-                            .AddNpgSql(auditLogDbConnectionString, name: "AuditLogDb",
-                                healthQuery: $"SELECT * FROM \"{auditLogTableName}\"  LIMIT 1")
-                            .AddNpgSql(dataProtectionDbConnectionString, name: "DataProtectionDb",
-                                healthQuery: $"SELECT * FROM \"{dataProtectionTableName}\"  LIMIT 1");
-                        break;
-                    case DatabaseProviderType.MySql:
-                        healthChecksBuilder
-                            .AddMySql(configurationDbConnectionString, name: "ConfigurationDb")
-                            .AddMySql(persistedGrantsDbConnectionString, name: "PersistentGrantsDb")
-                            .AddMySql(identityDbConnectionString, name: "IdentityDb")
-                            .AddMySql(logDbConnectionString, name: "LogDb")
-                            .AddMySql(auditLogDbConnectionString, name: "AuditLogDb")
-                            .AddMySql(dataProtectionDbConnectionString, name: "DataProtectionDb");
-                        break;
-                    default:
-                        throw new NotImplementedException($"Health checks not defined for database provider {databaseProvider.ProviderType}");
-                }
-            }
         }
 
         public static void AddForwardHeaders(this IApplicationBuilder app)

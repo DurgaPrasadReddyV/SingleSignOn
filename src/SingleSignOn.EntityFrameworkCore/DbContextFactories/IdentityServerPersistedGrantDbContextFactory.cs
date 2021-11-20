@@ -14,7 +14,7 @@ namespace SingleSignOn.EntityFrameworkCore.DbContextFactories
             var builder = new DbContextOptionsBuilder<IdentityServerPersistedGrantDbContext>()
                 .UseSqlServer(GetConnectionStringFromConfiguration(), b =>
                 {
-                    b.MigrationsHistoryTable("__PersistedGrant_Migrations");
+                    b.MigrationsHistoryTable("__IdentityServerPersistedGrant_Migrations");
                 });
 
             return new IdentityServerPersistedGrantDbContext(builder.Options, new OperationalStoreOptions());
@@ -29,13 +29,8 @@ namespace SingleSignOn.EntityFrameworkCore.DbContextFactories
         private static IConfigurationRoot BuildConfiguration()
         {
             var builder = new ConfigurationBuilder()
-                .SetBasePath(
-                    Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        $"..{Path.DirectorySeparatorChar}IdentityServer.Admin.Api"
-                    )
-                )
-                .AddJsonFile("appsettings.json", optional: false);
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), $".."))
+                .AddJsonFile("sharedsettings.json", optional: false);
 
             return builder.Build();
         }

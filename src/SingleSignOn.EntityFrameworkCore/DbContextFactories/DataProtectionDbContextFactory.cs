@@ -6,17 +6,17 @@ using Microsoft.Extensions.Configuration;
 
 namespace SingleSignOn.EntityFrameworkCore.DbContextFactories
 {
-    public class IdentityServerDataProtectionDbContextFactory : IDesignTimeDbContextFactory<IdentityServerDataProtectionDbContext>
+    public class DataProtectionDbContextFactory : IDesignTimeDbContextFactory<DataProtectionDbContext>
     {
-        public IdentityServerDataProtectionDbContext CreateDbContext(string[] args)
+        public DataProtectionDbContext CreateDbContext(string[] args)
         {
-            var builder = new DbContextOptionsBuilder<IdentityServerDataProtectionDbContext>()
+            var builder = new DbContextOptionsBuilder<DataProtectionDbContext>()
                 .UseSqlServer(GetConnectionStringFromConfiguration(), b =>
                 {
                     b.MigrationsHistoryTable("__DataProtection_Migrations");
                 });
 
-            return new IdentityServerDataProtectionDbContext(builder.Options);
+            return new DataProtectionDbContext(builder.Options);
         }
 
         private static string GetConnectionStringFromConfiguration()
@@ -28,13 +28,8 @@ namespace SingleSignOn.EntityFrameworkCore.DbContextFactories
         private static IConfigurationRoot BuildConfiguration()
         {
             var builder = new ConfigurationBuilder()
-                .SetBasePath(
-                    Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        $"..{Path.DirectorySeparatorChar}IdentityServer.Admin.Api"
-                    )
-                )
-                .AddJsonFile("appsettings.json", optional: false);
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), $".."))
+                .AddJsonFile("sharedsettings.json", optional: false);
 
             return builder.Build();
         }

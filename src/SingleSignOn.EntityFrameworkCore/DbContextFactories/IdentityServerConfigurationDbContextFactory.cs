@@ -14,7 +14,7 @@ namespace SingleSignOn.EntityFrameworkCore.DbContextFactories
             var builder = new DbContextOptionsBuilder<IdentityServerConfigurationDbContext>()
                 .UseSqlServer(GetConnectionStringFromConfiguration(), b =>
                 {
-                    b.MigrationsHistoryTable("__Configuration_Migrations");
+                    b.MigrationsHistoryTable("__IdentityServerConfiguration_Migrations");
                 });
 
             return new IdentityServerConfigurationDbContext(builder.Options, new ConfigurationStoreOptions());
@@ -29,13 +29,8 @@ namespace SingleSignOn.EntityFrameworkCore.DbContextFactories
         private static IConfigurationRoot BuildConfiguration()
         {
             var builder = new ConfigurationBuilder()
-                .SetBasePath(
-                    Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        $"..{Path.DirectorySeparatorChar}IdentityServer.Admin.Api"
-                    )
-                )
-                .AddJsonFile("appsettings.json", optional: false);
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), $".."))
+                .AddJsonFile("sharedsettings.json", optional: false);
 
             return builder.Build();
         }

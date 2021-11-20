@@ -6,5 +6,36 @@
     "AdminLogDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
     "AdminAuditLogDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
     "DataProtectionDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true"
+  },
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Error",
+      "Override": {
+        "Skoruba": "Information"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "Console"
+      },
+      {
+        "Name": "File",
+        "Args": {
+          "path": "Log/skoruba_admin.txt",
+          "rollingInterval": "Day"
+        }
+      },
+      {
+        "Name": "MSSqlServer",
+        "Args": {
+          "connectionString": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
+          "tableName": "Log",
+          "columnOptionsSection": {
+            "addStandardColumns": [ "LogEvent" ],
+            "removeStandardColumns": [ "Properties" ]
+          }
+        }
+      }
+    ]
   }
 }

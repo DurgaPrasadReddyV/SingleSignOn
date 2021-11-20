@@ -5,9 +5,9 @@ using SingleSignOn.EntityFrameworkCore.Entities.Identity;
 
 namespace SingleSignOn.EntityFrameworkCore.DbContexts
 {
-    public class AdminIdentityDbContext : IdentityDbContext<UserIdentity, UserIdentityRole, string, UserIdentityUserClaim, UserIdentityUserRole, UserIdentityUserLogin, UserIdentityRoleClaim, UserIdentityUserToken>
+    public class IdentityDbContext : IdentityDbContext<UserIdentity, UserIdentityRole, string, UserIdentityUserClaim, UserIdentityUserRole, UserIdentityUserLogin, UserIdentityRoleClaim, UserIdentityUserToken>
     {
-        public AdminIdentityDbContext(DbContextOptions<AdminIdentityDbContext> options) : base(options)
+        public IdentityDbContext(DbContextOptions<IdentityDbContext> options) : base(options)
         {
             
         }

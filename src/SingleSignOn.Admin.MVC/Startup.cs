@@ -31,8 +31,8 @@ namespace IdentityServer.Admin
         public void ConfigureServices(IServiceCollection services)
         {
             // Adds the IdentityServer4 Admin UI with custom options.
-            services.AddIdentityServer4AdminUI<AdminIdentityDbContext, IdentityServerConfigurationDbContext, IdentityServerPersistedGrantDbContext,
-            AdminLogDbContext, AdminAuditLogDbContext, AuditLog, IdentityServerDataProtectionDbContext,
+            services.AddIdentityServer4AdminUI<IdentityDbContext, IdentityServerConfigurationDbContext, IdentityServerPersistedGrantDbContext,
+            LogDbContext, AuditLogDbContext, AuditLog, DataProtectionDbContext,
                 UserIdentity, UserIdentityRole, UserIdentityUserClaim, UserIdentityUserRole,
                 UserIdentityUserLogin, UserIdentityRoleClaim, UserIdentityUserToken, string,
                 IdentityUserDto, IdentityRoleDto, IdentityUsersDto, IdentityRolesDto, IdentityUserRolesDto,

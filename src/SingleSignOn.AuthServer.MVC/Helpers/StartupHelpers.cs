@@ -24,9 +24,6 @@ using Skoruba.IdentityServer4.Admin.EntityFramework.Helpers;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Identity.Web;
-using Skoruba.IdentityServer4.Admin.EntityFramework.Configuration.Configuration;
-using Skoruba.IdentityServer4.Admin.EntityFramework.Configuration.MySql;
-using Skoruba.IdentityServer4.Admin.EntityFramework.Configuration.PostgreSQL;
 using Skoruba.IdentityServer4.Admin.EntityFramework.Configuration.SqlServer;
 using Skoruba.IdentityServer4.Shared.Configuration.Authentication;
 using Skoruba.IdentityServer4.Shared.Configuration.Configuration.Identity;
@@ -39,7 +36,8 @@ namespace SingleSignOn.AuthServer.MVC.Helpers
         /// Register services for MVC and localization including available languages
         /// </summary>
         /// <param name="services"></param>
-        public static IMvcBuilder AddMvcWithLocalization<TUser, TKey>(this IServiceCollection services, IConfiguration configuration)
+        public static IMvcBuilder AddMvcWithLocalization<TUser, TKey>(this IServiceCollection services,
+            IConfiguration configuration)
             where TUser : IdentityUser<TKey>
             where TKey : IEquatable<TKey>
         {
@@ -64,7 +62,8 @@ namespace SingleSignOn.AuthServer.MVC.Helpers
             services.Configure<RequestLocalizationOptions>(
                 opts =>
                 {
-                    // If cultures are specified in the configuration, use them (making sure they are among the available cultures),
+                    // If cultures are specified in the configuration,
+                    // use them (making sure they are among the available cultures),
                     // otherwise use all the available cultures
                     var supportedCultureCodes = (cultureConfiguration?.Cultures?.Count > 0 ?
                         cultureConfiguration.Cultures.Intersect(CultureConfiguration.AvailableCultures) :
@@ -73,12 +72,14 @@ namespace SingleSignOn.AuthServer.MVC.Helpers
                     if (!supportedCultureCodes.Any()) supportedCultureCodes = CultureConfiguration.AvailableCultures;
                     var supportedCultures = supportedCultureCodes.Select(c => new CultureInfo(c)).ToList();
 
-                    // If the default culture is specified use it, otherwise use CultureConfiguration.DefaultRequestCulture ("en")
+                    // If the default culture is specified use it,
+                    // otherwise use CultureConfiguration.DefaultRequestCulture ("en")
                     var defaultCultureCode = string.IsNullOrEmpty(cultureConfiguration?.DefaultCulture) ?
                         CultureConfiguration.DefaultRequestCulture : cultureConfiguration?.DefaultCulture;
 
                     // If the default culture is not among the supported cultures, use the first supported culture as default
-                    if (!supportedCultureCodes.Contains(defaultCultureCode)) defaultCultureCode = supportedCultureCodes.FirstOrDefault();
+                    if (!supportedCultureCodes.Contains(defaultCultureCode)) defaultCultureCode = 
+                        supportedCultureCodes.FirstOrDefault();
 
                     opts.DefaultRequestCulture = new RequestCulture(defaultCultureCode);
                     opts.SupportedCultures = supportedCultures;
@@ -160,71 +161,30 @@ namespace SingleSignOn.AuthServer.MVC.Helpers
         /// <typeparam name="TIdentityDbContext"></typeparam>
         /// <param name="services"></param>
         /// <param name="configuration"></param>
-        public static void RegisterDbContexts<TIdentityDbContext, TConfigurationDbContext, TPersistedGrantDbContext, TDataProtectionDbContext>(this IServiceCollection services, IConfiguration configuration)
+        public static void RegisterDbContexts<TIdentityDbContext, 
+            TConfigurationDbContext, 
+            TPersistedGrantDbContext, 
+            TDataProtectionDbContext>(this IServiceCollection services, IConfiguration configuration)
             where TIdentityDbContext : DbContext
             where TPersistedGrantDbContext : DbContext, IAdminPersistedGrantDbContext
             where TConfigurationDbContext : DbContext, IAdminConfigurationDbContext
             where TDataProtectionDbContext : DbContext, IDataProtectionKeyContext
         {
-            var databaseProvider = configuration.GetSection(nameof(DatabaseProviderConfiguration)).Get<DatabaseProviderConfiguration>();
+            var identityConnectionString = configuration
+                .GetConnectionString(ConfigurationConsts.IdentityDbConnectionStringKey);
+            var configurationConnectionString = configuration
+                .GetConnectionString(ConfigurationConsts.ConfigurationDbConnectionStringKey);
+            var persistedGrantsConnectionString = configuration
+                .GetConnectionString(ConfigurationConsts.PersistedGrantDbConnectionStringKey);
+            var dataProtectionConnectionString = configuration
+                .GetConnectionString(ConfigurationConsts.DataProtectionDbConnectionStringKey);
 
-            var identityConnectionString = configuration.GetConnectionString(ConfigurationConsts.IdentityDbConnectionStringKey);
-            var configurationConnectionString = configuration.GetConnectionString(ConfigurationConsts.ConfigurationDbConnectionStringKey);
-            var persistedGrantsConnectionString = configuration.GetConnectionString(ConfigurationConsts.PersistedGrantDbConnectionStringKey);
-            var dataProtectionConnectionString = configuration.GetConnectionString(ConfigurationConsts.DataProtectionDbConnectionStringKey);
-
-            switch (databaseProvider.ProviderType)
-            {
-                case DatabaseProviderType.SqlServer:
-                    services.RegisterSqlServerDbContexts<TIdentityDbContext, TConfigurationDbContext, TPersistedGrantDbContext, TDataProtectionDbContext>(identityConnectionString, configurationConnectionString, persistedGrantsConnectionString, dataProtectionConnectionString);
-                    break;
-                case DatabaseProviderType.PostgreSQL:
-                    services.RegisterNpgSqlDbContexts<TIdentityDbContext, TConfigurationDbContext, TPersistedGrantDbContext, TDataProtectionDbContext>(identityConnectionString, configurationConnectionString, persistedGrantsConnectionString, dataProtectionConnectionString);
-                    break;
-                case DatabaseProviderType.MySql:
-                    services.RegisterMySqlDbContexts<TIdentityDbContext, TConfigurationDbContext, TPersistedGrantDbContext, TDataProtectionDbContext>(identityConnectionString, configurationConnectionString, persistedGrantsConnectionString, dataProtectionConnectionString);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(databaseProvider.ProviderType), $@"The value needs to be one of {string.Join(", ", Enum.GetNames(typeof(DatabaseProviderType)))}.");
-            }
-        }
-
-        /// <summary>
-        /// Register InMemory DbContexts for IdentityServer ConfigurationStore, PersistedGrants, Identity and DataProtection
-        /// Configure the connection strings in AppSettings.json
-        /// </summary>
-        /// <typeparam name="TConfigurationDbContext"></typeparam>
-        /// <typeparam name="TPersistedGrantDbContext"></typeparam>
-        /// <typeparam name="TIdentityDbContext"></typeparam>
-        /// <param name="services"></param>
-        public static void RegisterDbContextsStaging<TIdentityDbContext, TConfigurationDbContext, TPersistedGrantDbContext, TDataProtectionDbContext>(
-            this IServiceCollection services)
-            where TIdentityDbContext : DbContext
-            where TPersistedGrantDbContext : DbContext, IAdminPersistedGrantDbContext
-            where TConfigurationDbContext : DbContext, IAdminConfigurationDbContext
-            where TDataProtectionDbContext : DbContext, IDataProtectionKeyContext
-        {
-            var identityDatabaseName = Guid.NewGuid().ToString();
-            services.AddDbContext<TIdentityDbContext>(optionsBuilder => optionsBuilder.UseInMemoryDatabase(identityDatabaseName));
-
-            var configurationDatabaseName = Guid.NewGuid().ToString();
-            var operationalDatabaseName = Guid.NewGuid().ToString();
-            var dataProtectionDatabaseName = Guid.NewGuid().ToString();
-
-            services.AddConfigurationDbContext<TConfigurationDbContext>(options =>
-            {
-                options.ConfigureDbContext = b => b.UseInMemoryDatabase(configurationDatabaseName);
-            });
-
-            services.AddOperationalDbContext<TPersistedGrantDbContext>(options =>
-            {
-                options.ConfigureDbContext = b => b.UseInMemoryDatabase(operationalDatabaseName);
-            });
-
-            services.AddDbContext<TDataProtectionDbContext>(options =>
-            {
-                options.UseInMemoryDatabase(dataProtectionDatabaseName);
-            });
+            services.RegisterSqlServerDbContexts<TIdentityDbContext, 
+                TConfigurationDbContext, 
+                TPersistedGrantDbContext, 
+                TDataProtectionDbContext>(identityConnectionString, 
+                configurationConnectionString, persistedGrantsConnectionString, dataProtectionConnectionString);
+                
         }
 
         /// <summary>
@@ -235,7 +195,9 @@ namespace SingleSignOn.AuthServer.MVC.Helpers
         /// <typeparam name="TUserIdentityRole">User Identity Role class</typeparam>
         /// <param name="services"></param>
         /// <param name="configuration"></param>
-        public static void AddAuthenticationServices<TIdentityDbContext, TUserIdentity, TUserIdentityRole>(this IServiceCollection services, IConfiguration configuration) where TIdentityDbContext : DbContext
+        public static void AddAuthenticationServices<TIdentityDbContext, 
+            TUserIdentity, TUserIdentityRole>(this IServiceCollection services, 
+            IConfiguration configuration) where TIdentityDbContext : DbContext
             where TUserIdentity : class
             where TUserIdentityRole : class
         {
@@ -249,7 +211,8 @@ namespace SingleSignOn.AuthServer.MVC.Helpers
                 .AddSingleton(identityOptions)
                 .AddScoped<ApplicationSignInManager<TUserIdentity>>()
                 .AddScoped<UserResolver<TUserIdentity>>()
-                .AddIdentity<TUserIdentity, TUserIdentityRole>(options => configuration.GetSection(nameof(IdentityOptions)).Bind(options))
+                .AddIdentity<TUserIdentity, TUserIdentityRole>(options => 
+                configuration.GetSection(nameof(IdentityOptions)).Bind(options))
                 .AddEntityFrameworkStores<TIdentityDbContext>()
                 .AddDefaultTokenProviders();
 
@@ -270,8 +233,6 @@ namespace SingleSignOn.AuthServer.MVC.Helpers
             });
 
             var authenticationBuilder = services.AddAuthentication();
-
-            AddExternalProviders(authenticationBuilder, configuration);
         }
 
         /// <summary>
@@ -318,8 +279,8 @@ namespace SingleSignOn.AuthServer.MVC.Helpers
         /// <typeparam name="TPersistedGrantDbContext"></typeparam>
         /// <param name="services"></param>
         /// <param name="configuration"></param>
-        public static IIdentityServerBuilder AddIdentityServer<TConfigurationDbContext, TPersistedGrantDbContext, TUserIdentity>(
-            this IServiceCollection services,
+        public static IIdentityServerBuilder AddIdentityServer<TConfigurationDbContext,
+            TPersistedGrantDbContext, TUserIdentity>(this IServiceCollection services,
             IConfiguration configuration)
             where TPersistedGrantDbContext : DbContext, IAdminPersistedGrantDbContext
             where TConfigurationDbContext : DbContext, IAdminConfigurationDbContext
@@ -351,41 +312,6 @@ namespace SingleSignOn.AuthServer.MVC.Helpers
         }
 
         /// <summary>
-        /// Add external providers
-        /// </summary>
-        /// <param name="authenticationBuilder"></param>
-        /// <param name="configuration"></param>
-        private static void AddExternalProviders(AuthenticationBuilder authenticationBuilder,
-            IConfiguration configuration)
-        {
-            var externalProviderConfiguration = configuration.GetSection(nameof(ExternalProvidersConfiguration)).Get<ExternalProvidersConfiguration>();
-
-            if (externalProviderConfiguration.UseGitHubProvider)
-            {
-                authenticationBuilder.AddGitHub(options =>
-                {
-                    options.ClientId = externalProviderConfiguration.GitHubClientId;
-                    options.ClientSecret = externalProviderConfiguration.GitHubClientSecret;
-                    options.CallbackPath = externalProviderConfiguration.GitHubCallbackPath;
-                    options.Scope.Add("user:email");
-                });
-            }
-
-            if (externalProviderConfiguration.UseAzureAdProvider)
-            {
-                authenticationBuilder.AddMicrosoftIdentityWebApp(options =>
-                {
-                    options.ClientSecret = externalProviderConfiguration.AzureAdSecret;
-                    options.ClientId = externalProviderConfiguration.AzureAdClientId;
-                    options.TenantId = externalProviderConfiguration.AzureAdTenantId;
-                    options.Instance = externalProviderConfiguration.AzureInstance;
-                    options.Domain = externalProviderConfiguration.AzureDomain;
-                    options.CallbackPath = externalProviderConfiguration.AzureAdCallbackPath;
-                });
-            }
-        }
-
-        /// <summary>
         /// Register middleware for localization
         /// </summary>
         /// <param name="app"></param>
@@ -408,39 +334,6 @@ namespace SingleSignOn.AuthServer.MVC.Helpers
                 options.AddPolicy(AuthorizationConsts.AdministrationPolicy,
                     policy => policy.RequireRole(rootConfiguration.AdminConfiguration.AdministrationRole));
             });
-        }
-
-        public static void AddIdSHealthChecks<TConfigurationDbContext, TPersistedGrantDbContext, TIdentityDbContext, TDataProtectionDbContext>(this IServiceCollection services, IConfiguration configuration)
-            where TConfigurationDbContext : DbContext, IAdminConfigurationDbContext
-            where TPersistedGrantDbContext : DbContext, IAdminPersistedGrantDbContext
-            where TIdentityDbContext : DbContext
-            where TDataProtectionDbContext : DbContext, IDataProtectionKeyContext
-        {
-            var configurationDbConnectionString = configuration.GetConnectionString(ConfigurationConsts.ConfigurationDbConnectionStringKey);
-            var persistedGrantsDbConnectionString = configuration.GetConnectionString(ConfigurationConsts.PersistedGrantDbConnectionStringKey);
-            var identityDbConnectionString = configuration.GetConnectionString(ConfigurationConsts.IdentityDbConnectionStringKey);
-            var dataProtectionDbConnectionString = configuration.GetConnectionString(ConfigurationConsts.DataProtectionDbConnectionStringKey);
-
-            var healthChecksBuilder = services.AddHealthChecks()
-                .AddDbContextCheck<TConfigurationDbContext>("ConfigurationDbContext")
-                .AddDbContextCheck<TPersistedGrantDbContext>("PersistedGrantsDbContext")
-                .AddDbContextCheck<TIdentityDbContext>("IdentityDbContext")
-                .AddDbContextCheck<TDataProtectionDbContext>("DataProtectionDbContext");
-
-            var serviceProvider = services.BuildServiceProvider();
-            var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
-            using (var scope = scopeFactory.CreateScope())
-            {
-                var configurationTableName = DbContextHelpers.GetEntityTable<TConfigurationDbContext>(scope.ServiceProvider);
-                var persistedGrantTableName = DbContextHelpers.GetEntityTable<TPersistedGrantDbContext>(scope.ServiceProvider);
-                var identityTableName = DbContextHelpers.GetEntityTable<TIdentityDbContext>(scope.ServiceProvider);
-                var dataProtectionTableName = DbContextHelpers.GetEntityTable<TDataProtectionDbContext>(scope.ServiceProvider);
-
-                healthChecksBuilder.AddSqlServer(configurationDbConnectionString, name: "ConfigurationDb", healthQuery: $"SELECT TOP 1 * FROM dbo.[{configurationTableName}]")
-                    .AddSqlServer(persistedGrantsDbConnectionString, name: "PersistentGrantsDb", healthQuery: $"SELECT TOP 1 * FROM dbo.[{persistedGrantTableName}]")
-                    .AddSqlServer(identityDbConnectionString, name: "IdentityDb", healthQuery: $"SELECT TOP 1 * FROM dbo.[{identityTableName}]")
-                    .AddSqlServer(dataProtectionDbConnectionString, name: "DataProtectionDb", healthQuery: $"SELECT TOP 1 * FROM dbo.[{dataProtectionTableName}]");
-            }
         }
     }
 }

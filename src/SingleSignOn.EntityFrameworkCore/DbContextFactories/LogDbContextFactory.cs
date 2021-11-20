@@ -6,17 +6,17 @@ using Microsoft.Extensions.Configuration;
 
 namespace SingleSignOn.EntityFrameworkCore.DbContextFactories
 {
-    public class AdminLogDbContextFactory : IDesignTimeDbContextFactory<AdminLogDbContext>
+    public class LogDbContextFactory : IDesignTimeDbContextFactory<LogDbContext>
     {
-        public AdminLogDbContext CreateDbContext(string[] args)
+        public LogDbContext CreateDbContext(string[] args)
         {
-            var builder = new DbContextOptionsBuilder<AdminLogDbContext>()
+            var builder = new DbContextOptionsBuilder<LogDbContext>()
                 .UseSqlServer(GetConnectionStringFromConfiguration(), b =>
                 {
-                    b.MigrationsHistoryTable("__AdminLog_Migrations");
+                    b.MigrationsHistoryTable("__Log_Migrations");
                 });
 
-            return new AdminLogDbContext(builder.Options);
+            return new LogDbContext(builder.Options);
         }
 
         private static string GetConnectionStringFromConfiguration()
@@ -28,13 +28,8 @@ namespace SingleSignOn.EntityFrameworkCore.DbContextFactories
         private static IConfigurationRoot BuildConfiguration()
         {
             var builder = new ConfigurationBuilder()
-                .SetBasePath(
-                    Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        $"..{Path.DirectorySeparatorChar}IdentityServer.Admin.Api"
-                    )
-                )
-                .AddJsonFile("appsettings.json", optional: false);
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), $".."))
+                .AddJsonFile("sharedsettings.json", optional: false);
 
             return builder.Build();
         }

@@ -30,31 +30,34 @@ namespace SingleSignOn.AuthServer.MVC
         public void ConfigureServices(IServiceCollection services)
         {
             var rootConfiguration = CreateRootConfiguration();
+            
             services.AddSingleton(rootConfiguration);
-            // Register DbContexts for IdentityServer and Identity
-            RegisterDbContexts(services);
 
-            // Save data protection keys to db, using a common application name shared between Admin and STS
-            services.AddDataProtection<IdentityServerDataProtectionDbContext>(Configuration);
+            services.RegisterDbContexts<IdentityDbContext, 
+                IdentityServerConfigurationDbContext, 
+                IdentityServerPersistedGrantDbContext, 
+                DataProtectionDbContext>(Configuration);
 
-            // Add email senders which is currently setup for SendGrid and SMTP
+            services.AddDataProtection<DataProtectionDbContext>(Configuration);
+
             services.AddEmailSenders(Configuration);
 
-            // Add services for authentication, including Identity model and external providers
-            RegisterAuthentication(services);
+            services.AddAuthenticationServices<IdentityDbContext, 
+                UserIdentity, UserIdentityRole>(Configuration);
 
-            // Add HSTS options
-            RegisterHstsOptions(services);
+            services.AddIdentityServer<IdentityServerConfigurationDbContext,
+                IdentityServerPersistedGrantDbContext, UserIdentity>(Configuration);
 
-            // Add all dependencies for Asp.Net Core Identity in MVC - these dependencies are injected into generic Controllers
-            // Including settings for MVC and Localization
-            // If you want to change primary keys or use another db model for Asp.Net Core Identity:
+            services.AddHsts(options =>
+            {
+                options.Preload = true;
+                options.IncludeSubDomains = true;
+                options.MaxAge = TimeSpan.FromDays(365);
+            });
+
             services.AddMvcWithLocalization<UserIdentity, string>(Configuration);
 
-            // Add authorization policies for MVC
-            RegisterAuthorization(services);
-
-            services.AddIdSHealthChecks<IdentityServerConfigurationDbContext, IdentityServerPersistedGrantDbContext, AdminIdentityDbContext, IdentityServerDataProtectionDbContext>(Configuration);
+            services.AddAuthorizationPolicies(rootConfiguration);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -76,7 +79,7 @@ namespace SingleSignOn.AuthServer.MVC
             app.UseSecurityHeaders(Configuration);
 
             app.UseStaticFiles();
-            UseAuthentication(app);
+            app.UseIdentityServer();
             app.UseMvcLocalizationServices();
 
             app.UseRouting();
@@ -88,38 +91,6 @@ namespace SingleSignOn.AuthServer.MVC
                 {
                     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
                 });
-            });
-        }
-
-        public virtual void RegisterDbContexts(IServiceCollection services)
-        {
-            services.RegisterDbContexts<AdminIdentityDbContext, IdentityServerConfigurationDbContext, IdentityServerPersistedGrantDbContext, IdentityServerDataProtectionDbContext>(Configuration);
-        }
-
-        public virtual void RegisterAuthentication(IServiceCollection services)
-        {
-            services.AddAuthenticationServices<AdminIdentityDbContext, UserIdentity, UserIdentityRole>(Configuration);
-            services.AddIdentityServer<IdentityServerConfigurationDbContext, IdentityServerPersistedGrantDbContext, UserIdentity>(Configuration);
-        }
-
-        public virtual void RegisterAuthorization(IServiceCollection services)
-        {
-            var rootConfiguration = CreateRootConfiguration();
-            services.AddAuthorizationPolicies(rootConfiguration);
-        }
-
-        public virtual void UseAuthentication(IApplicationBuilder app)
-        {
-            app.UseIdentityServer();
-        }
-
-        public virtual void RegisterHstsOptions(IServiceCollection services)
-        {
-            services.AddHsts(options =>
-            {
-                options.Preload = true;
-                options.IncludeSubDomains = true;
-                options.MaxAge = TimeSpan.FromDays(365);
             });
         }
 

@@ -54,9 +54,9 @@ namespace IdentityServer.Admin
                 .Get<DatabaseMigrationsConfiguration>();
 
             await DbMigrationHelpers
-                .ApplyDbMigrationsWithDataSeedAsync<IdentityServerConfigurationDbContext, AdminIdentityDbContext,
-                    IdentityServerPersistedGrantDbContext, AdminLogDbContext, AdminAuditLogDbContext,
-                    IdentityServerDataProtectionDbContext, UserIdentity, UserIdentityRole>(host,
+                .ApplyDbMigrationsWithDataSeedAsync<IdentityServerConfigurationDbContext, IdentityDbContext,
+                    IdentityServerPersistedGrantDbContext, LogDbContext, AuditLogDbContext,
+                    DataProtectionDbContext, UserIdentity, UserIdentityRole>(host,
                     applyDbMigrationWithDataSeedFromProgramArguments, seedConfiguration, databaseMigrationsConfiguration);
         }
 

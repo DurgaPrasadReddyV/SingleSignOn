@@ -6,17 +6,17 @@ using Microsoft.Extensions.Configuration;
 
 namespace SingleSignOn.EntityFrameworkCore.DbContextFactories
 {
-    public class AdminAuditLogDbContextFactory : IDesignTimeDbContextFactory<AdminAuditLogDbContext>
+    public class AuditLogDbContextFactory : IDesignTimeDbContextFactory<AuditLogDbContext>
     {
-        public AdminAuditLogDbContext CreateDbContext(string[] args)
+        public AuditLogDbContext CreateDbContext(string[] args)
         {
-            var builder = new DbContextOptionsBuilder<AdminAuditLogDbContext>()
+            var builder = new DbContextOptionsBuilder<AuditLogDbContext>()
                 .UseSqlServer(GetConnectionStringFromConfiguration(), b =>
                 {
-                    b.MigrationsHistoryTable("__AdminAuditLog_Migrations");
+                    b.MigrationsHistoryTable("__AuditLog_Migrations");
                 });
 
-            return new AdminAuditLogDbContext(builder.Options);
+            return new AuditLogDbContext(builder.Options);
         }
 
         private static string GetConnectionStringFromConfiguration()
@@ -28,13 +28,8 @@ namespace SingleSignOn.EntityFrameworkCore.DbContextFactories
         private static IConfigurationRoot BuildConfiguration()
         {
             var builder = new ConfigurationBuilder()
-                .SetBasePath(
-                    Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        $"..{Path.DirectorySeparatorChar}IdentityServer.Admin.Api"
-                    )
-                )
-                .AddJsonFile("appsettings.json", optional: false);
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(),$".."))
+                .AddJsonFile("sharedsettings.json", optional: false);
 
             return builder.Build();
         }

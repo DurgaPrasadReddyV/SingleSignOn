@@ -5,11 +5,11 @@ using Skoruba.IdentityServer4.Admin.EntityFramework.Interfaces;
 
 namespace SingleSignOn.EntityFrameworkCore.DbContexts
 {
-    public class AdminLogDbContext : DbContext, IAdminLogDbContext
+    public class LogDbContext : DbContext, IAdminLogDbContext
     {
         public DbSet<Log> Logs { get; set; }
 
-        public AdminLogDbContext(DbContextOptions<AdminLogDbContext> options)
+        public LogDbContext(DbContextOptions<LogDbContext> options)
             : base(options)
         {
         }

@@ -19,8 +19,6 @@ namespace SingleSignOn.AuthServer.MVC
                 .CreateLogger();
             try
             {
-                DockerHelpers.ApplyDockerConfiguration(configuration);
-
                 CreateHostBuilder(args).Build().Run();
             }
             catch (Exception ex)
@@ -42,8 +40,8 @@ namespace SingleSignOn.AuthServer.MVC
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
-                .AddJsonFile("serilog.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"serilog.{environment}.json", optional: true, reloadOnChange: true);
+                .AddJsonFile("sharedsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"sharedsettings.{environment}.json", optional: true, reloadOnChange: true);
 
             if (isDevelopment)
             {
@@ -66,11 +64,11 @@ namespace SingleSignOn.AuthServer.MVC
                  {
                      var configurationRoot = configApp.Build();
 
-                     configApp.AddJsonFile("serilog.json", optional: true, reloadOnChange: true);
+                     configApp.AddJsonFile("sharedsettings.json", optional: true, reloadOnChange: true);
 
                      var env = hostContext.HostingEnvironment;
 
-                     configApp.AddJsonFile($"serilog.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
+                     configApp.AddJsonFile($"sharedsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
 
                      if (env.IsDevelopment())
                      {

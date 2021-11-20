@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SingleSignOn.DbMigrator", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{686EA432-DFCA-4222-A285-7D19A8A5BC30}"
 	ProjectSection(SolutionItems) = preProject
-		src\SharedSettings.json = src\SharedSettings.json
+		src\sharedsettings.json = src\sharedsettings.json
 	EndProjectSection
 EndProject
 Global
