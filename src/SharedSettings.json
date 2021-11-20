@@ -1,0 +1,10 @@
+{
+  "ConnectionStrings": {
+    "ConfigurationDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "PersistedGrantDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "IdentityDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "AdminLogDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "AdminAuditLogDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "DataProtectionDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true"
+  }
+}
