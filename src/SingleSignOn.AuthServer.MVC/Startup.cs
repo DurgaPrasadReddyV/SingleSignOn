@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SingleSignOn.EntityFrameworkCore.DbContexts;
-using SingleSignOn.EntityFrameworkCore.Entities.Identity;
+using SingleSignOn.EntityFrameworkCore.Entities;
 using SingleSignOn.AuthServer.MVC.Configuration;
 using SingleSignOn.AuthServer.MVC.Configuration.Constants;
 using SingleSignOn.AuthServer.MVC.Configuration.Interfaces;
@@ -33,7 +33,7 @@ namespace SingleSignOn.AuthServer.MVC
             
             services.AddSingleton(rootConfiguration);
 
-            services.RegisterDbContexts<IdentityDbContext, 
+            services.RegisterDbContexts<UserIdentityDbContext, 
                 IdentityServerConfigurationDbContext, 
                 IdentityServerPersistedGrantDbContext, 
                 DataProtectionDbContext>(Configuration);
@@ -42,7 +42,7 @@ namespace SingleSignOn.AuthServer.MVC
 
             services.AddEmailSenders(Configuration);
 
-            services.AddAuthenticationServices<IdentityDbContext, 
+            services.AddAuthenticationServices<UserIdentityDbContext, 
                 UserIdentity, UserIdentityRole>(Configuration);
 
             services.AddIdentityServer<IdentityServerConfigurationDbContext,

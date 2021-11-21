@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Skoruba.AuditLogging.EntityFramework.Entities;
 using SingleSignOn.EntityFrameworkCore.DbContexts;
-using SingleSignOn.EntityFrameworkCore.Entities.Identity;
+using SingleSignOn.EntityFrameworkCore.Entities;
 using Skoruba.IdentityServer4.Shared.Configuration.Helpers;
 using SingleSignOn.Admin.MVC.Dtos;
 using SingleSignOn.Admin.MVC.Dtos.Identity;
@@ -31,7 +31,7 @@ namespace IdentityServer.Admin
         public void ConfigureServices(IServiceCollection services)
         {
             // Adds the IdentityServer4 Admin UI with custom options.
-            services.AddIdentityServer4AdminUI<IdentityDbContext, IdentityServerConfigurationDbContext, IdentityServerPersistedGrantDbContext,
+            services.AddIdentityServer4AdminUI<UserIdentityDbContext, IdentityServerConfigurationDbContext, IdentityServerPersistedGrantDbContext,
             LogDbContext, AuditLogDbContext, AuditLog, DataProtectionDbContext,
                 UserIdentity, UserIdentityRole, UserIdentityUserClaim, UserIdentityUserRole,
                 UserIdentityUserLogin, UserIdentityRoleClaim, UserIdentityUserToken, string,

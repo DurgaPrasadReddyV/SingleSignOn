@@ -1,6 +1,6 @@
 ﻿namespace SingleSignOn.EntityFrameworkCore.Constants
 {
-    public static class TableConsts
+    public static class TableNames
     {
         public const string IdentityRoles = "Roles";
         public const string IdentityRoleClaims = "RoleClaims";

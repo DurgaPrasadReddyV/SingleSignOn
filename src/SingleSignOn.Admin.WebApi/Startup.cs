@@ -17,7 +17,7 @@ using SingleSignOn.Admin.WebApi.Helpers;
 using SingleSignOn.Admin.WebApi.Mappers;
 using SingleSignOn.Admin.WebApi.Resources;
 using SingleSignOn.EntityFrameworkCore.DbContexts;
-using SingleSignOn.EntityFrameworkCore.Entities.Identity;
+using SingleSignOn.EntityFrameworkCore.Entities;
 using Skoruba.IdentityServer4.Shared.Configuration.Helpers;
 using SingleSignOn.Admin.WebApi.Dtos;
 using SingleSignOn.Admin.WebApi.Dtos.Identity;
@@ -42,7 +42,7 @@ namespace SingleSignOn.Admin.WebApi
             var adminApiConfiguration = Configuration.GetSection(nameof(AdminApiConfiguration)).Get<AdminApiConfiguration>();
             services.AddSingleton(adminApiConfiguration);
 
-            services.AddDbContexts<IdentityDbContext, IdentityServerConfigurationDbContext, 
+            services.AddDbContexts<UserIdentityDbContext, IdentityServerConfigurationDbContext, 
                 IdentityServerPersistedGrantDbContext, LogDbContext, AuditLogDbContext, 
                 DataProtectionDbContext, AuditLog>(Configuration);
 
@@ -54,7 +54,7 @@ namespace SingleSignOn.Admin.WebApi
             services.AddScoped<ControllerExceptionFilterAttribute>();
             services.AddScoped<IApiErrorResources, ApiErrorResources>();
 
-            services.AddApiAuthentication<IdentityDbContext, 
+            services.AddApiAuthentication<UserIdentityDbContext, 
                 UserIdentity, UserIdentityRole>(Configuration);
 
             services.AddAuthorizationPolicies();
@@ -66,7 +66,7 @@ namespace SingleSignOn.Admin.WebApi
                 IdentityRoleClaimDto, IdentityRoleClaimsDto>)
             };
 
-            services.AddAdminAspNetIdentityServices<IdentityDbContext, IdentityServerPersistedGrantDbContext,
+            services.AddAdminAspNetIdentityServices<UserIdentityDbContext, IdentityServerPersistedGrantDbContext,
                 IdentityUserDto, IdentityRoleDto, UserIdentity, UserIdentityRole, string, 
                 UserIdentityUserClaim, UserIdentityUserRole,
                 UserIdentityUserLogin, UserIdentityRoleClaim, UserIdentityUserToken,

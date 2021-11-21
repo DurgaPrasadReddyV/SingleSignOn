@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using Skoruba.IdentityServer4.Admin.EntityFramework.Configuration.Configuration;
 using SingleSignOn.EntityFrameworkCore.DbContexts;
-using SingleSignOn.EntityFrameworkCore.Entities.Identity;
+using SingleSignOn.EntityFrameworkCore.Entities;
 using SingleSignOn.EntityFrameworkCore.Helpers;
 using Skoruba.IdentityServer4.Shared.Configuration.Helpers;
 
@@ -54,7 +54,7 @@ namespace IdentityServer.Admin
                 .Get<DatabaseMigrationsConfiguration>();
 
             await DbMigrationHelpers
-                .ApplyDbMigrationsWithDataSeedAsync<IdentityServerConfigurationDbContext, IdentityDbContext,
+                .ApplyDbMigrationsWithDataSeedAsync<IdentityServerConfigurationDbContext, UserIdentityDbContext,
                     IdentityServerPersistedGrantDbContext, LogDbContext, AuditLogDbContext,
                     DataProtectionDbContext, UserIdentity, UserIdentityRole>(host,
                     applyDbMigrationWithDataSeedFromProgramArguments, seedConfiguration, databaseMigrationsConfiguration);

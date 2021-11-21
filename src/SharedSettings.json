@@ -1,11 +1,11 @@
 {
   "ConnectionStrings": {
-    "ConfigurationDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
-    "PersistedGrantDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
-    "IdentityDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
-    "AdminLogDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
-    "AdminAuditLogDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
-    "DataProtectionDbConnection": "Server=(LocalDB)\\v11.0;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true"
+    "IdentityServerConfigurationDbConnection": "Server=(LocalDb)\\MSSQLLocalDB;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "IdentityServerPersistedGrantDbConnection": "Server=(LocalDb)\\MSSQLLocalDB;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "UserIdentityDbConnection": "Server=(LocalDb)\\MSSQLLocalDB;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "LogDbConnection": "Server=(LocalDb)\\MSSQLLocalDB;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "AuditLogDbConnection": "Server=(LocalDb)\\MSSQLLocalDB;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true",
+    "DataProtectionDbConnection": "Server=(LocalDb)\\MSSQLLocalDB;Database=IdentityServer4Admin;Trusted_Connection=True;MultipleActiveResultSets=true"
   },
   "Serilog": {
     "MinimumLevel": {

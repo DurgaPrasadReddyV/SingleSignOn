@@ -5,10 +5,10 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Skoruba.IdentityServer4.Admin.EntityFramework" Version="2.0.1"/>
-		<PackageReference Include="Skoruba.IdentityServer4.Admin.EntityFramework.Configuration" Version="2.0.1"/>
-		<PackageReference Include="Skoruba.IdentityServer4.Admin.EntityFramework.Identity" Version="2.0.1"/>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.12"/>
+		<PackageReference Include="Skoruba.IdentityServer4.Admin.EntityFramework" Version="2.0.1" />
+		<PackageReference Include="Skoruba.IdentityServer4.Admin.EntityFramework.Configuration" Version="2.0.1" />
+		<PackageReference Include="Skoruba.IdentityServer4.Admin.EntityFramework.Identity" Version="2.0.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.12" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.5" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.5" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.5" />

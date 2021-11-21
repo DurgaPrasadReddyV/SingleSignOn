@@ -6,17 +6,17 @@ using Microsoft.Extensions.Configuration;
 
 namespace SingleSignOn.EntityFrameworkCore.DbContextFactories
 {
-    public class IdentityDbContextFactory : IDesignTimeDbContextFactory<IdentityDbContext>
+    public class UserIdentityDbContextFactory : IDesignTimeDbContextFactory<UserIdentityDbContext>
     {
-        public IdentityDbContext CreateDbContext(string[] args)
+        public UserIdentityDbContext CreateDbContext(string[] args)
         {
-            var builder = new DbContextOptionsBuilder<IdentityDbContext>()
+            var builder = new DbContextOptionsBuilder<UserIdentityDbContext>()
                 .UseSqlServer(GetConnectionStringFromConfiguration(), b =>
                 {
                     b.MigrationsHistoryTable("__Identity_Migrations");
                 });
 
-            return new IdentityDbContext(builder.Options);
+            return new UserIdentityDbContext(builder.Options);
         }
 
         private static string GetConnectionStringFromConfiguration()
