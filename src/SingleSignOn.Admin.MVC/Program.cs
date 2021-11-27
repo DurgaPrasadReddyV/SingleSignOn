@@ -16,9 +16,7 @@ namespace IdentityServer.Admin
 {
 	public class Program
     {
-        private const string SeedArgs = "/seed";
-
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             var configuration = GetConfiguration(args);
 
@@ -30,8 +28,6 @@ namespace IdentityServer.Admin
             {
                 var host = CreateHostBuilder(args).Build();
 
-                await ApplyDbMigrationsWithDataSeedAsync(args, configuration, host);
-
                 host.Run();
             }
             catch (Exception ex)
@@ -42,22 +38,6 @@ namespace IdentityServer.Admin
             {
                 Log.CloseAndFlush();
             }
-        }
-
-        private static async Task ApplyDbMigrationsWithDataSeedAsync(string[] args, IConfiguration configuration, IHost host)
-        {
-            var applyDbMigrationWithDataSeedFromProgramArguments = args.Any(x => x == SeedArgs);
-            if (applyDbMigrationWithDataSeedFromProgramArguments) args = args.Except(new[] { SeedArgs }).ToArray();
-
-            var seedConfiguration = configuration.GetSection(nameof(SeedConfiguration)).Get<SeedConfiguration>();
-            var databaseMigrationsConfiguration = configuration.GetSection(nameof(DatabaseMigrationsConfiguration))
-                .Get<DatabaseMigrationsConfiguration>();
-
-            await DbMigrationHelpers
-                .ApplyDbMigrationsWithDataSeedAsync<IdentityServerConfigurationDbContext, UserIdentityDbContext,
-                    IdentityServerPersistedGrantDbContext, LogDbContext, AuditLogDbContext,
-                    DataProtectionDbContext, UserIdentity, UserIdentityRole>(host,
-                    applyDbMigrationWithDataSeedFromProgramArguments, seedConfiguration, databaseMigrationsConfiguration);
         }
 
         private static IConfiguration GetConfiguration(string[] args)
@@ -78,8 +58,6 @@ namespace IdentityServer.Admin
             }
 
             var configuration = configurationBuilder.Build();
-
-            configuration.AddAzureKeyVaultConfiguration(configurationBuilder);
 
             configurationBuilder.AddCommandLine(args);
             configurationBuilder.AddEnvironmentVariables();

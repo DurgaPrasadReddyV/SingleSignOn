@@ -1,12 +1,20 @@
 ﻿using IdentityServer4.EntityFramework.Options;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using SingleSignOn.EntityFrameworkCore.Constants;
 using SingleSignOn.EntityFrameworkCore.DbContexts;
+using SingleSignOn.EntityFrameworkCore.Entities;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using IdentityServer4;
+using IdentityServer4.EntityFramework.DbContexts;
+using IdentityServer4.EntityFramework.Mappers;
+using System.Reflection;
+using Skoruba.IdentityServer4.Admin.EntityFramework.Configuration.Configuration;
 
 namespace SingleSignOn.DbMigrator
 {
@@ -14,54 +22,110 @@ namespace SingleSignOn.DbMigrator
     {
         static async Task Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .Enrich.FromLogContext()
-                .WriteTo.Async(c => c.File("Logs/logs.txt"))
-                .WriteTo.Async(c => c.Console())
-                .CreateLogger();
-
-            var configuration = GetConfiguration(args);
-
-            using (var logDbContext = new LogDbContext(new DbContextOptionsBuilder<LogDbContext>()
-                .UseSqlServer(configuration.GetConnectionString(ConnectionStrings.LogDb)).Options))
-            {
-                await logDbContext.Database.MigrateAsync();
-            }
-
-            using (var auditLogDbContext = new AuditLogDbContext(new DbContextOptionsBuilder<AuditLogDbContext>()
-                .UseSqlServer(configuration.GetConnectionString(ConnectionStrings.AuditLogDb)).Options))
-            {
-                await auditLogDbContext.Database.MigrateAsync();
-            }
-
-            using (var dataProtectionDbContext = new DataProtectionDbContext(new DbContextOptionsBuilder<DataProtectionDbContext>()
-                .UseSqlServer(configuration.GetConnectionString(ConnectionStrings.DataProtectionDb)).Options))
-            {
-                await dataProtectionDbContext.Database.MigrateAsync();
-            }
-
-            using (var identityServerConfigurationDbContext = new IdentityServerConfigurationDbContext(new DbContextOptionsBuilder<IdentityServerConfigurationDbContext>()
-                .UseSqlServer(configuration.GetConnectionString(ConnectionStrings.IdentityServerConfigurationDb)).Options, new ConfigurationStoreOptions()))
-            {
-                await identityServerConfigurationDbContext.Database.MigrateAsync();
-            }
-
-            using (var identityServerPersistedGrantDbContext = new IdentityServerPersistedGrantDbContext(new DbContextOptionsBuilder<IdentityServerPersistedGrantDbContext>()
-                .UseSqlServer(configuration.GetConnectionString(ConnectionStrings.IdentityServerPersistedGrantDb)).Options, new OperationalStoreOptions()))
-            {
-                await identityServerPersistedGrantDbContext.Database.MigrateAsync();
-            }
-
-            using (var userIdentityDbContext = new UserIdentityDbContext(new DbContextOptionsBuilder<UserIdentityDbContext>()
-                .UseSqlServer(configuration.GetConnectionString(ConnectionStrings.UserIdentityDb)).Options))
-            {
-                await userIdentityDbContext.Database.MigrateAsync();
-            }
-
+            var serviceProvider = BuildServiceProvider(args);
+            await MigrateDatabases(serviceProvider);
+            await SampleData.Initialize(serviceProvider);
         }
 
-        private static IConfiguration GetConfiguration(string[] args)
+        static async Task MigrateDatabases (IServiceProvider serviceProvider)
+        {
+            using (var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
+            {
+                using (var context = scope.ServiceProvider.GetRequiredService<IdentityServerPersistedGrantDbContext>())
+                {
+                    await context.Database.MigrateAsync();
+                }
+
+                using (var context = scope.ServiceProvider.GetRequiredService<UserIdentityDbContext>())
+                {
+                    await context.Database.MigrateAsync();
+                }
+
+                using (var context = scope.ServiceProvider.GetRequiredService<IdentityServerConfigurationDbContext>())
+                {
+                    await context.Database.MigrateAsync();
+                }
+
+                using (var context = scope.ServiceProvider.GetRequiredService<LogDbContext>())
+                {
+                    await context.Database.MigrateAsync();
+                }
+
+                using (var context = scope.ServiceProvider.GetRequiredService<AuditLogDbContext>())
+                {
+                    await context.Database.MigrateAsync();
+                }
+
+                using (var context = scope.ServiceProvider.GetRequiredService<DataProtectionDbContext>())
+                {
+                    await context.Database.MigrateAsync();
+                }
+            }
+        }
+
+        static ServiceProvider BuildServiceProvider(string[] args)
+        {
+            var services = new ServiceCollection();
+            var configuration = BuildConfiguration(args);
+            services.AddScoped<IConfiguration>(_ => configuration);
+            
+            var identityServerData = new IdentityServerData();
+            configuration.Bind("IdentityServerData", identityServerData);      //  <--- This
+            services.AddSingleton(identityServerData);
+            
+            var identityData = new IdentityData();
+            configuration.Bind("IdentityData", identityData);      //  <--- This
+            services.AddSingleton(identityData);
+            
+            services.AddDbContext<LogDbContext>(options =>
+            {
+               options.UseSqlServer(configuration.GetConnectionString(ConnectionStrings.LogDb));
+            });
+
+            services.AddDbContext<AuditLogDbContext>(options =>
+            {
+               options.UseSqlServer(configuration.GetConnectionString(ConnectionStrings.AuditLogDb));
+            });
+
+            services.AddDbContext<DataProtectionDbContext>(options =>
+            {
+               options.UseSqlServer(configuration.GetConnectionString(ConnectionStrings.DataProtectionDb));
+            });
+
+            services.AddDbContext<UserIdentityDbContext>(options =>
+            {
+               options.UseSqlServer(configuration.GetConnectionString(ConnectionStrings.UserIdentityDb));
+            });
+
+            services.AddIdentity<UserIdentity, UserIdentityRole>()
+            .AddEntityFrameworkStores<UserIdentityDbContext>()
+            .AddDefaultTokenProviders();
+
+            var migrationsAssembly = typeof(UserIdentityDbContext).GetTypeInfo().Assembly.GetName().Name;
+
+            services.AddIdentityServer()
+                .AddDeveloperSigningCredential()
+                .AddAspNetIdentity<UserIdentity>()
+                .AddConfigurationStore<IdentityServerConfigurationDbContext>(options =>
+                {
+                    options.ConfigureDbContext = 
+                    builder => builder.UseSqlServer(configuration.GetConnectionString(ConnectionStrings.IdentityServerConfigurationDb),
+                     sql => sql.MigrationsAssembly(migrationsAssembly));
+                })
+                .AddOperationalStore<IdentityServerPersistedGrantDbContext>(options =>
+                {
+                    options.ConfigureDbContext = 
+                    builder => builder.UseSqlServer(configuration.GetConnectionString(ConnectionStrings.IdentityServerPersistedGrantDb),
+                     sql => sql.MigrationsAssembly(migrationsAssembly));
+                    // this enables automatic token cleanup. this is optional.
+                    options.EnableTokenCleanup = true;
+                    options.TokenCleanupInterval = 30;
+                });
+
+            return services.BuildServiceProvider();
+        }
+
+        private static IConfiguration BuildConfiguration(string[] args)
         {
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
@@ -72,6 +136,5 @@ namespace SingleSignOn.DbMigrator
 
             return configurationBuilder.Build();
         }
-
     }
 }

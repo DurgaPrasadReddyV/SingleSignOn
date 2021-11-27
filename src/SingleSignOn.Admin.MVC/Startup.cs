@@ -68,13 +68,6 @@ namespace IdentityServer.Admin
             {
                 options.Security.UseHsts = true;
             }
-
-            // Set migration assembly for application of db migrations
-            var migrationsAssembly =  typeof(UserIdentity).GetTypeInfo().Assembly.GetName().Name;
-            options.DatabaseMigrations.SetMigrationsAssemblies(migrationsAssembly);
-
-            // Use production DbContexts and auth services.
-            options.Testing.IsStaging = false;
         }
     }
 }
