@@ -21,6 +21,27 @@ using SingleSignOn.EntityFrameworkCore.Entities;
 using Skoruba.IdentityServer4.Shared.Configuration.Helpers;
 using SingleSignOn.Admin.WebApi.Dtos;
 using SingleSignOn.Admin.WebApi.Dtos.Identity;
+using SingleSignOn.Admin.WebApi.AuditLogging;
+using Skoruba.AuditLogging.EntityFramework.Services;
+using Skoruba.AuditLogging.EntityFramework.Extensions;
+using Skoruba.AuditLogging.EntityFramework.Repositories;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using SingleSignOn.Admin.WebApi.Helpers.Localization;
+using SingleSignOn.Admin.WebApi.Configuration.ApplicationParts;
+using SingleSignOn.Admin.WebApi.Configuration.Constants;
+using Skoruba.IdentityServer4.Admin.EntityFramework.Configuration.Configuration;
+using Skoruba.IdentityServer4.Admin.EntityFramework.Configuration.SqlServer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
+using IdentityServer4.EntityFramework.Storage;
+using SingleSignOn.EntityFrameworkCore.Constants;
+using System.Reflection;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Skoruba.IdentityServer4.Shared.Configuration.Email;
+using IdentityModel;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace SingleSignOn.Admin.WebApi
 {
@@ -42,22 +63,75 @@ namespace SingleSignOn.Admin.WebApi
             var adminApiConfiguration = Configuration.GetSection(nameof(AdminApiConfiguration)).Get<AdminApiConfiguration>();
             services.AddSingleton(adminApiConfiguration);
 
-            services.AddDbContexts<UserIdentityDbContext, IdentityServerConfigurationDbContext, 
-                IdentityServerPersistedGrantDbContext, LogDbContext, AuditLogDbContext, 
-                DataProtectionDbContext, AuditLog>(Configuration);
+            var migrationsAssembly = typeof(UserIdentityDbContext).GetTypeInfo().Assembly.GetName().Name;
 
-            services.AddDataProtection<DataProtectionDbContext>(Configuration);
+            // Config DB for identity
+            services.AddDbContext<UserIdentityDbContext>(
+                options => options.UseSqlServer(Configuration.GetConnectionString(ConnectionStrings.UserIdentityDb),
+             sql => sql.MigrationsAssembly(migrationsAssembly)));
 
-            // Add email senders which is currently setup for SendGrid and SMTP
-            services.AddEmailSenders(Configuration);
+            // Config DB from existing connection
+            services.AddConfigurationDbContext<IdentityServerConfigurationDbContext>(
+                options => options.ConfigureDbContext = b => b.UseSqlServer(Configuration.GetConnectionString(ConnectionStrings.IdentityServerConfigurationDb),
+              sql => sql.MigrationsAssembly(migrationsAssembly)));
+
+            // Operational DB from existing connection
+            services.AddOperationalDbContext<IdentityServerPersistedGrantDbContext>(
+                options => options.ConfigureDbContext = b => b.UseSqlServer(Configuration.GetConnectionString(ConnectionStrings.IdentityServerPersistedGrantDb),
+              sql => sql.MigrationsAssembly(migrationsAssembly)));
+
+            // DataProtectionKey DB from existing connection
+            services.AddDbContext<DataProtectionDbContext>(
+                options => options.UseSqlServer(Configuration.GetConnectionString(ConnectionStrings.DataProtectionDb),
+             sql => sql.MigrationsAssembly(migrationsAssembly)));
+
+             // Log DB from existing connection
+            services.AddDbContext<LogDbContext>(
+                options => options.UseSqlServer(Configuration.GetConnectionString(ConnectionStrings.LogDb),
+                sql => sql.MigrationsAssembly(migrationsAssembly)));
+
+            // Audit logging connection
+            services.AddDbContext<AuditLogDbContext>(
+                options => options.UseSqlServer(Configuration.GetConnectionString(ConnectionStrings.LogDb),
+                sql => sql.MigrationsAssembly(migrationsAssembly)));
+
+            services.AddDataProtection()
+                .SetApplicationName("Skoruba.IdentityServer4").PersistKeysToDbContext<DataProtectionDbContext>();
+
+            services.AddSingleton<IEmailSender, LogEmailSender>();
 
             services.AddScoped<ControllerExceptionFilterAttribute>();
             services.AddScoped<IApiErrorResources, ApiErrorResources>();
 
-            services.AddApiAuthentication<UserIdentityDbContext, 
-                UserIdentity, UserIdentityRole>(Configuration);
+            services.AddIdentity<UserIdentity, UserIdentityRole>(options => Configuration.GetSection(nameof(IdentityOptions)).Bind(options))
+                .AddEntityFrameworkStores<UserIdentityDbContext>()
+                .AddDefaultTokenProviders();
 
-            services.AddAuthorizationPolicies();
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+                {
+                    options.Authority = adminApiConfiguration.IdentityServerBaseUrl;
+                    options.RequireHttpsMetadata = adminApiConfiguration.RequireHttpsMetadata;
+                    options.Audience = adminApiConfiguration.OidcApiName;
+                });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(AuthorizationConsts.AdministrationPolicy,
+                    policy =>
+                        policy.RequireAssertion(context => context.User.HasClaim(c =>
+                                ((c.Type == JwtClaimTypes.Role && c.Value == adminApiConfiguration.AdministrationRole) 
+                                || (c.Type == $"client_{JwtClaimTypes.Role}" && c.Value == adminApiConfiguration.AdministrationRole))) 
+                        && context.User.HasClaim(c => c.Type == JwtClaimTypes.Scope && c.Value == adminApiConfiguration.OidcApiName)
+                        ));
+            });
 
             var profileTypes = new HashSet<Type>
             {
@@ -77,14 +151,40 @@ namespace SingleSignOn.Admin.WebApi
             services.AddAdminServices<IdentityServerConfigurationDbContext, 
                 IdentityServerPersistedGrantDbContext, LogDbContext>();
 
-            services.AddAdminApiCors(adminApiConfiguration);
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(
+                    builder =>
+                    {
+                        if (adminApiConfiguration.CorsAllowAnyOrigin)
+                        {
+                            builder.AllowAnyOrigin();
+                        }
+                        else
+                        {
+                            builder.WithOrigins(adminApiConfiguration.CorsAllowOrigins);
+                        }
 
-            services.AddMvcServices<IdentityUserDto, IdentityRoleDto,
-                UserIdentity, UserIdentityRole, string, UserIdentityUserClaim, UserIdentityUserRole,
-                UserIdentityUserLogin, UserIdentityRoleClaim, UserIdentityUserToken,
-                IdentityUsersDto, IdentityRolesDto, IdentityUserRolesDto,
-                IdentityUserClaimsDto, IdentityUserProviderDto, IdentityUserProvidersDto, IdentityUserChangePasswordDto,
-                IdentityRoleClaimsDto, IdentityUserClaimDto, IdentityRoleClaimDto>();
+                        builder.AllowAnyHeader();
+                        builder.AllowAnyMethod();
+                    });
+            });
+
+            services.AddLocalization(opts => { opts.ResourcesPath = ConfigurationConsts.ResourcesPath; });
+
+            services.TryAddTransient(typeof(IGenericControllerLocalizer<>), typeof(GenericControllerLocalizer<>));
+
+            services.AddControllersWithViews(o => { o.Conventions.Add(new GenericControllerRouteConvention()); })
+                .AddDataAnnotationsLocalization()
+                .ConfigureApplicationPartManager(m =>
+                {
+                    m.FeatureProviders.Add(new GenericTypeControllerFeatureProvider<IdentityUserDto, IdentityRoleDto,
+                            UserIdentity, UserIdentityRole, string, UserIdentityUserClaim, UserIdentityUserRole,
+                             UserIdentityUserLogin, UserIdentityRoleClaim, UserIdentityUserToken,
+                            IdentityUsersDto, IdentityRolesDto, IdentityUserRolesDto, IdentityUserClaimsDto,
+                            IdentityUserProviderDto, IdentityUserProvidersDto, IdentityUserChangePasswordDto,
+                            IdentityRoleClaimsDto, IdentityUserClaimDto, IdentityRoleClaimDto>());
+                });
 
             services.AddSwaggerGen(options =>
             {
@@ -109,12 +209,27 @@ namespace SingleSignOn.Admin.WebApi
                 options.OperationFilter<AuthorizeCheckOperationFilter>();
             });
 
-            services.AddAuditEventLogging<AuditLogDbContext, AuditLog>(Configuration);
+            var auditLoggingConfiguration = Configuration.GetSection(nameof(AuditLoggingConfiguration)).Get<AuditLoggingConfiguration>();
+            services.AddSingleton(auditLoggingConfiguration);
+
+            services.AddAuditLogging(options => { options.Source = auditLoggingConfiguration.Source; })
+                .AddEventData<ApiAuditSubject, ApiAuditAction>()
+                .AddAuditSinks<DatabaseAuditEventLoggerSink<AuditLog>>();
+
+            services.AddTransient<IAuditLoggingRepository<AuditLog>, AuditLoggingRepository<AuditLogDbContext, AuditLog>>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AdminApiConfiguration adminApiConfiguration)
         {
-            app.AddForwardHeaders();
+            var forwardingOptions = new ForwardedHeadersOptions()
+            {
+                ForwardedHeaders = ForwardedHeaders.All
+            };
+
+            forwardingOptions.KnownNetworks.Clear();
+            forwardingOptions.KnownProxies.Clear();
+
+            app.UseForwardedHeaders(forwardingOptions);
 
             if (env.IsDevelopment())
             {
@@ -125,7 +240,6 @@ namespace SingleSignOn.Admin.WebApi
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint($"{adminApiConfiguration.ApiBaseUrl}/swagger/v1/swagger.json", adminApiConfiguration.ApiName);
-
                 c.OAuthClientId(adminApiConfiguration.OidcSwaggerUIClientId);
                 c.OAuthAppName(adminApiConfiguration.ApiName);
                 c.OAuthUsePkce();
@@ -138,11 +252,6 @@ namespace SingleSignOn.Admin.WebApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-
-                endpoints.MapHealthChecks("/health", new HealthCheckOptions
-                {
-                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-                });
             });
         }
     }

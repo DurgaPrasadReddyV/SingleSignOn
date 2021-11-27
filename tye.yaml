@@ -1,7 +1,7 @@
 name: IdentityServer
 services:
 - name: auth-server
-  project: src/IdentityServer.AuthServer/IdentityServer.AuthServer.csproj
+  project: src/SingleSignOn.AuthServer.MVC/SingleSignOn.AuthServer.MVC.csproj
   bindings:
     - protocol: https
       port: 44310
@@ -10,7 +10,7 @@ services:
     - Kestrel__Certificates__Default__Password=8b6039b6-c67a-448b-977b-0ce6d3fcfd49
 
 - name: admin-api
-  project: src/IdentityServer.Admin.Api/IdentityServer.Admin.Api.csproj
+  project: src/SingleSignOn.Admin.WebApi/SingleSignOn.Admin.WebApi.csproj
   bindings:
     - protocol: https
       port: 44302
@@ -19,7 +19,7 @@ services:
     - Kestrel__Certificates__Default__Password=8b6039b6-c67a-448b-977b-0ce6d3fcfd49
 
 - name: admin-ui
-  project: src/IdentityServer.AdminUI/IdentityServer.AdminUI.csproj
+  project: src/SingleSignOn.Admin.MVC/SingleSignOn.Admin.MVC.csproj
   bindings:
     - protocol: https
       port: 44303

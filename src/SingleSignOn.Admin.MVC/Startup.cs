@@ -52,7 +52,6 @@ namespace IdentityServer.Admin
             app.UseEndpoints(endpoint =>
             {
                 endpoint.MapIdentityServer4AdminUI();
-                endpoint.MapIdentityServer4AdminUIHealthChecks();
             });
         }
 
