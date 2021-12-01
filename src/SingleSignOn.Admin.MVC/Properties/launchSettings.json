@@ -16,7 +16,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "IdentityServer.Admin": {
+    "SingleSignOn.Admin.MVC": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {

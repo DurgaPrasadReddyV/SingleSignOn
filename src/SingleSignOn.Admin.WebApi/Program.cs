@@ -20,6 +20,8 @@ namespace SingleSignOn.Admin.WebApi
                  .ConfigureAppConfiguration((hostContext, configApp) =>
                  {
                      var env = hostContext.HostingEnvironment;
+                     var sourcePath = Path.Combine(env.ContentRootPath, "..");
+                     configApp.AddJsonFile(Path.Combine(sourcePath, "sharedsettings.json"), optional: true, reloadOnChange: true);
                      configApp.AddJsonFile("sharedsettings.json", optional: true, reloadOnChange: true);
                      configApp.AddJsonFile($"sharedsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
                  })

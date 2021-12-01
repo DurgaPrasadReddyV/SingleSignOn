@@ -1,16 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Serilog;
-using Skoruba.IdentityServer4.Admin.EntityFramework.Configuration.Configuration;
-using SingleSignOn.EntityFrameworkCore.DbContexts;
-using SingleSignOn.EntityFrameworkCore.Entities;
-using SingleSignOn.EntityFrameworkCore.Helpers;
-using Skoruba.IdentityServer4.Shared.Configuration.Helpers;
 
 namespace IdentityServer.Admin
 {
@@ -29,7 +20,9 @@ namespace IdentityServer.Admin
                  .ConfigureAppConfiguration((hostContext, configApp) =>
                  {
                      var env = hostContext.HostingEnvironment;
-                     configApp.AddJsonFile($"sharedsettings.json", optional: false, reloadOnChange: true);
+                     var sourcePath = Path.Combine(env.ContentRootPath, "..");
+                     configApp.AddJsonFile(Path.Combine(sourcePath, "sharedsettings.json"), optional: true, reloadOnChange: true);
+                     configApp.AddJsonFile("sharedsettings.json", optional: true, reloadOnChange: true);
                      configApp.AddJsonFile($"sharedsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
                  })
                 .ConfigureWebHostDefaults(webBuilder =>
